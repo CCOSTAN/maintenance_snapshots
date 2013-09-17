@@ -8,7 +8,9 @@
 
 # Set some variables
 $Date = (Get-Date).ToString(“yyyyMMdd”)
+$Time = (Get-Date).ToString("HHmm")
 $username = [Environment]::UserName
+$scriptname = [Environment]::GetCommandLineArgs()[0]
 
 # Add PowerCLI cmdlets.
 Add-PSSnapin VMware.VimAutomation.Core 
@@ -20,7 +22,7 @@ Connect-VIServer -Server $VMHost
 # Get list of VMs
 if ($VMs) {
     foreach ( $i in $VMs) {
-        $guests += Get-VM -Name $i
+        $guests += @(Get-VM -Name $i)
     }
 }
 elseif (( $resourcepool) -and !($VMs)) {
@@ -31,12 +33,12 @@ else { "No VMs were provided/found" }
 # Create/Remove/Cancel
 if (( $create ) -and !( $remove )) {
     foreach ($guest in $guests) {
-        new-snapshot -VM $guest -name $Date -Description "created by $username on $Date"
+        new-snapshot -VM $guest -name "pre-maintenance $Date" -Description "created by $username using $scriptname on $Date_$Time"
     }
 }
 elseif (( $remove ) -and !( $create )) {
     foreach ($guest in $guests ) {
-        $guest | get-snapshot -name "created by $username on $Date" | Remove-Snapshot -whatif
+        $guest | get-snapshot -name "pre-maintenance $Date" | Remove-Snapshot
     }
 }
 else { "You need to specify -create or -remove, but not both" }
